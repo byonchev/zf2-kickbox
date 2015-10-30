@@ -2,6 +2,7 @@
     "name": "byonchev/zf2-kickbox",
     "description": "Zend Framework 2 Module that provides email validation via http://kickbox.io",
     "type": "library",
+    "license": "MIT",
     "keywords": [
         "kickbox",
         "email",
