@@ -51,6 +51,10 @@ class Kickbox extends AbstractValidator
      */
     public function __construct($options = null)
     {
+        if (is_null($options)) {
+            $options = [];
+        }
+
         if ($options instanceof Traversable) {
             $options = ArrayUtils::iteratorToArray($options);
         }
@@ -120,16 +124,19 @@ class Kickbox extends AbstractValidator
         $strictMode = $this->isStrictMode();
 
         try {
-            $client = new Client($this->getApiKey());
+            $result = $this->getCachedResult($value);
 
-            $kickboxClient = $client->kickbox();
+            if (!$result) {
+                $client        = new Client($this->getApiKey());
+                $kickboxClient = $client->kickbox();
 
-            /* @var Response $response */
-            $response = $kickboxClient->verify($value);
+                /* @var Response $response */
+                $response = $kickboxClient->verify($value);
+                $result   = $response->body['result'];
 
-            $this->logResponse($response);
-
-            $result = $response->body['result'];
+                $this->logResponse($response);
+                $this->cacheResult($value, $result);
+            }
 
             if ($strictMode) {
                 if ($result === self::RESULT_UNDELIVERABLE) {
@@ -157,6 +164,9 @@ class Kickbox extends AbstractValidator
         return true;
     }
 
+    /**
+     * @param \Exception $e
+     */
     protected function logError(\Exception $e)
     {
     }
@@ -166,5 +176,23 @@ class Kickbox extends AbstractValidator
      */
     protected function logResponse(Response $response)
     {
+    }
+
+    /**
+     * @param string $email
+     * @param string $result
+     */
+    protected function cacheResult($email, $result)
+    {
+    }
+
+    /**
+     * @param string $email
+     *
+     * @return null|string
+     */
+    protected function getCachedResult($email)
+    {
+        return null;
     }
 }
