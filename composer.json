@@ -1,0 +1,29 @@
+{
+    "name": "byonchev/zf2-kickbox",
+    "description": "Zend Framework 2 Module that provides email validation via http://kickbox.io",
+    "type": "library",
+    "keywords": [
+        "kickbox",
+        "email"
+        "validator",
+        "module",
+        "zf2"
+    ],
+    "homepage": "http://www.github.com/byonchev/zf2-kickbox",
+    "authors": [
+        {
+            "name": "Boris Yonchev",
+            "email": "boris@yonchev.me",
+        }
+    ],
+    "require": {
+        "php": ">=5.3.3",
+        "kickbox/kickbox": "~2.0.0"
+    },
+
+    "autoload": {
+        "psr-0": {
+            "KickboxValidator\\": "src/"
+        }
+    }
+}
