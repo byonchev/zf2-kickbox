@@ -4,7 +4,7 @@
     "type": "library",
     "keywords": [
         "kickbox",
-        "email"
+        "email",
         "validator",
         "module",
         "zf2"
@@ -13,7 +13,7 @@
     "authors": [
         {
             "name": "Boris Yonchev",
-            "email": "boris@yonchev.me",
+            "email": "boris@yonchev.me"
         }
     ],
     "require": {
