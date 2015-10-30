@@ -2,6 +2,8 @@
 
 namespace ZF2Kickbox\Validator;
 
+use Kickbox\Client;
+use Kickbox\HttpClient\Response;
 use Zend\Validator\AbstractValidator;
 
 /**
@@ -21,11 +23,11 @@ class Kickbox extends AbstractValidator
 
     public function isValid($value)
     {
-        $client  = new \Kickbox\Client('');
+        $client  = new Client('');
         $kickbox = $client->kickbox();
 
         try {
-            /* @var \Kickbox\HttpClient\Response $response */
+            /* @var Response $response */
             $response = $kickbox->verify($value);
 
             $this->logResponse($response);
@@ -58,9 +60,9 @@ class Kickbox extends AbstractValidator
     }
 
     /**
-     * @param \Kickbox\HttpClient\Response $response
+     * @param Response $response
      */
-    protected function logResponse(\Kickbox\HttpClient\Response $response)
+    protected function logResponse(Response $response)
     {
     }
 }
