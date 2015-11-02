@@ -9,7 +9,7 @@ use Zend\Stdlib\ArrayUtils;
 use Zend\Validator\AbstractValidator;
 use Zend\Validator\Exception\InvalidArgumentException;
 use ZF2Kickbox\Cache;
-use ZF2Kickbox\Logger\LoggerInterface;
+use ZF2Kickbox\LoggerInterface;
 
 /**
  * @author      Boris Yonchev <boris@yonchev.me>
