@@ -1,6 +1,6 @@
 <?php
 
-namespace ZF2Kickbox\Logger;
+namespace ZF2Kickbox;
 
 use Kickbox\HttpClient\Response;
 
