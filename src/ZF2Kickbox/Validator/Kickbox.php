@@ -211,10 +211,6 @@ class Kickbox extends AbstractValidator
                 $logger->logResponse($response);
             }
 
-            if ($cacheAdapter) {
-                $cacheAdapter->cacheVerification($value, $result);
-            }
-
             if ($strictMode) {
                 if ($result === self::RESULT_UNDELIVERABLE) {
                     $this->error(self::INVALID);
