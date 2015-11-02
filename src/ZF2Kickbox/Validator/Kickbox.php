@@ -191,6 +191,10 @@ class Kickbox extends AbstractValidator
             $cachedVerification = $cacheAdapter->getCachedVerification($value);
 
             if (is_bool($cachedVerification)) {
+                if ($cachedVerification == false) {
+                    $this->error(self::INVALID);
+                }
+
                 return $cachedVerification;
             }
         }
