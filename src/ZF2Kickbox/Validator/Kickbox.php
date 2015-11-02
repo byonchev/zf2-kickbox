@@ -8,6 +8,8 @@ use Traversable;
 use Zend\Stdlib\ArrayUtils;
 use Zend\Validator\AbstractValidator;
 use Zend\Validator\Exception\InvalidArgumentException;
+use ZF2Kickbox\Cache;
+use ZF2Kickbox\Logger\LoggerInterface;
 
 /**
  * @author      Boris Yonchev <boris@yonchev.me>
@@ -43,6 +45,16 @@ class Kickbox extends AbstractValidator
     protected $strictMode;
 
     /**
+     * @var Cache\AdapterInterface
+     */
+    protected $cacheAdapter;
+
+    /**
+     * @var LoggerInterface
+     */
+    protected $logger;
+
+    /**
      * Sets validator options
      *
      * @param  array|Traversable $options
@@ -67,7 +79,18 @@ class Kickbox extends AbstractValidator
             $options['strictMode'] = false;
         }
 
-        $this->setApiKey($options['apiKey'])->setStrictMode($options['strictMode']);
+        if (!array_key_exists('cacheAdapter', $options)) {
+            $options['cacheAdapter'] = null;
+        }
+
+        if (!array_key_exists('logger', $options)) {
+            $options['logger'] = null;
+        }
+
+        $this->setApiKey($options['apiKey']);
+        $this->setStrictMode($options['strictMode']);
+        $this->setCacheAdapter($options['cacheAdapter']);
+        $this->setLogger($options['logger']);
 
         parent::__construct($options);
     }
@@ -113,6 +136,46 @@ class Kickbox extends AbstractValidator
     }
 
     /**
+     * @return Cache\AdapterInterface
+     */
+    public function getCacheAdapter()
+    {
+        return $this->cacheAdapter;
+    }
+
+    /**
+     * @param string|Cache\AdapterInterface $cacheAdapter
+     */
+    public function setCacheAdapter($cacheAdapter)
+    {
+        if (is_string($cacheAdapter)) {
+            $cacheAdapter = new $cacheAdapter;
+        }
+
+        $this->cacheAdapter = $cacheAdapter;
+    }
+
+    /**
+     * @return LoggerInterface
+     */
+    public function getLogger()
+    {
+        return $this->logger;
+    }
+
+    /**
+     * @param string|LoggerInterface $logger
+     */
+    public function setLogger($logger)
+    {
+        if (is_string($logger)) {
+            $logger = new $logger;
+        }
+
+        $this->logger = $logger;
+    }
+
+    /**
      * @param string $value
      *
      * @return bool
@@ -121,78 +184,67 @@ class Kickbox extends AbstractValidator
     {
         $this->setValue($value);
 
+        $cacheAdapter = $this->getCacheAdapter();
+        $logger       = $this->getLogger();
+
+        if ($cacheAdapter) {
+            $cachedVerification = $cacheAdapter->getCachedVerification($value);
+
+            if (is_bool($cachedVerification)) {
+                return $cachedVerification;
+            }
+        }
+
+        $isValid = true;
+
         $strictMode = $this->isStrictMode();
 
         try {
-            $result = $this->getCachedResult($value);
+            $client        = new Client($this->getApiKey());
+            $kickboxClient = $client->kickbox();
 
-            if (!$result) {
-                $client        = new Client($this->getApiKey());
-                $kickboxClient = $client->kickbox();
+            /* @var Response $response */
+            $response = $kickboxClient->verify($value);
+            $result   = $response->body['result'];
 
-                /* @var Response $response */
-                $response = $kickboxClient->verify($value);
-                $result   = $response->body['result'];
+            if ($logger) {
+                $logger->logResponse($response);
+            }
 
-                $this->logResponse($response);
-                $this->cacheResult($value, $result);
+            if ($cacheAdapter) {
+                $cacheAdapter->cacheVerification($value, $result);
             }
 
             if ($strictMode) {
                 if ($result === self::RESULT_UNDELIVERABLE) {
                     $this->error(self::INVALID);
 
-                    return false;
+                    $isValid = false;
                 } else if ($result !== self::RESULT_DELIVERABLE) {
                     $this->error(self::NOT_SAFE);
 
-                    return false;
+                    $isValid = false;
                 }
             } else if ($result === self::RESULT_UNDELIVERABLE) {
                 $this->error(self::INVALID);
 
-                return false;
+                $isValid = false;
             }
         } catch (\Exception $e) {
             $this->error(self::EXCEPTION);
 
-            $this->logError($e);
+            if ($logger) {
+                $logger->logError($e);
+            }
 
-            return false;
+            $isValid = false;
         }
 
-        return true;
+        if ($cacheAdapter) {
+            $cacheAdapter->cacheVerification($value, $isValid);
+        }
+
+        return $isValid;
     }
 
-    /**
-     * @param \Exception $e
-     */
-    protected function logError(\Exception $e)
-    {
-    }
-
-    /**
-     * @param Response $response
-     */
-    protected function logResponse(Response $response)
-    {
-    }
-
-    /**
-     * @param string $email
-     * @param string $result
-     */
-    protected function cacheResult($email, $result)
-    {
-    }
-
-    /**
-     * @param string $email
-     *
-     * @return null|string
-     */
-    protected function getCachedResult($email)
-    {
-        return null;
-    }
 }
