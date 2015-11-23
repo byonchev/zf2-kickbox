@@ -230,18 +230,16 @@ class Kickbox extends AbstractValidator
 
                 $isValid = false;
             }
+
+            if ($cacheAdapter) {
+                $cacheAdapter->cacheVerification($value, $isValid);
+            }
         } catch (\Exception $e) {
             $this->error(self::EXCEPTION);
 
             if ($logger) {
                 $logger->logError($e);
             }
-
-            $isValid = false;
-        }
-
-        if ($cacheAdapter) {
-            $cacheAdapter->cacheVerification($value, $isValid);
         }
 
         return $isValid;
