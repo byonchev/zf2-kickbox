@@ -25,6 +25,8 @@ class Kickbox extends AbstractValidator
     const NOT_SAFE  = 'notSafe';
     const EXCEPTION = 'exception';
 
+    const MAX_RETRIES = 3;
+
     /**
      * @var array
      */
@@ -204,15 +206,23 @@ class Kickbox extends AbstractValidator
         $strictMode = $this->isStrictMode();
 
         try {
-            $client        = new Client($this->getApiKey());
-            $kickboxClient = $client->kickbox();
+            $attempts = 0;
 
-            /* @var Response $response */
-            $response = $kickboxClient->verify($value);
-            $result   = $response->body['result'];
+            while($attempts < self::MAX_RETRIES) {
+                $response = $this->getVerificationResponse($value);
+                $result   = $response->body['result'];
 
-            if ($logger) {
-                $logger->logResponse($response);
+                if ($logger) {
+                    $logger->logResponse($response);
+                }
+
+                $attempts++;
+
+                if ($result !== self::RESULT_UNKNOWN) {
+                    break;
+                }
+
+                sleep(1);
             }
 
             if ($strictMode) {
@@ -245,4 +255,19 @@ class Kickbox extends AbstractValidator
         return $isValid;
     }
 
+    /**
+     * @param string $email
+     *
+     * @return Response
+     */
+    private function getVerificationResponse($email)
+    {
+        $client        = new Client($this->getApiKey());
+        $kickboxClient = $client->kickbox();
+
+        /* @var Response $response */
+        $response = $kickboxClient->verify($email);
+
+        return $response;
+    }
 }
