@@ -21,9 +21,9 @@ class Kickbox extends AbstractValidator
     const RESULT_RISKY         = 'risky';
     const RESULT_UNKNOWN       = 'unknown';
 
-    const INVALID   = 'invalidEmail';
-    const NOT_SAFE  = 'notSafe';
-    const EXCEPTION = 'exception';
+    const INVALID   = 'kickboxInvalidEmail';
+    const NOT_SAFE  = 'kickboxEmailNotSafe';
+    const EXCEPTION = 'kickboxException';
 
     const MAX_RETRIES = 3;
 
